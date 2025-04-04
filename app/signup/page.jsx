@@ -2,8 +2,9 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import Swal from "sweetalert2";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase"; // Make sure db is exported from your firebase config
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore"; // Add Firestore imports
 import { useRouter } from "next/navigation";
 
 export function SignUp({ onClose, setShowModal, setOnSwitchToSignIn }) {
@@ -15,6 +16,34 @@ export function SignUp({ onClose, setShowModal, setOnSwitchToSignIn }) {
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
+
+  // Function to create user document in Firestore
+  const createUserDocument = async (user, additionalData = {}) => {
+    if (!user) return;
+
+    const userRef = doc(db, "users", user.uid);
+    
+    await setDoc(userRef, {
+      uid: user.uid,
+      email: user.email,
+      displayName: additionalData.displayName || user.displayName || "",
+      gender: additionalData.gender || "",
+      createdAt: serverTimestamp(),
+      lastLogin: serverTimestamp(),
+      profileComplete: false,
+      role: "student", // Default role
+      ...additionalData
+    });
+
+    // Create empty user progress document
+    const progressRef = doc(db, "userProgress", user.uid);
+    await setDoc(progressRef, {
+      userId: user.uid,
+      lessonsCompleted: 0,
+      lastUpdated: serverTimestamp(),
+      lessons: {} // Will store lessonId: completed pairs
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,14 +71,23 @@ export function SignUp({ onClose, setShowModal, setOnSwitchToSignIn }) {
     }
 
     try {
+      // 1. Create auth user
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
 
+      // 2. Update auth profile with display name
       await updateProfile(userCredential.user, {
         displayName: name,
+      });
+
+      // 3. Create user document in Firestore
+      await createUserDocument(userCredential.user, {
+        displayName: name,
+        gender,
+        emailVerified: false
       });
 
       Swal.fire({
@@ -95,7 +133,16 @@ export function SignUp({ onClose, setShowModal, setOnSwitchToSignIn }) {
 
     try {
       const result = await signInWithPopup(auth, provider);
+      const user = result.user;
       
+      // Create user document for Google sign-up
+      await createUserDocument(user, {
+        displayName: user.displayName,
+        emailVerified: user.emailVerified,
+        // Google users might not provide gender, you could prompt them later
+        profileComplete: false
+      });
+
       Swal.fire({
         icon: "success",
         title: "Welcome to HerLingua!",
@@ -104,7 +151,7 @@ export function SignUp({ onClose, setShowModal, setOnSwitchToSignIn }) {
       });
 
       setShowModal(false);
-      router.push("/lessons");
+      router.push("/dashboard");
     } catch (error) {
       console.error("Google sign-up error:", error);
       Swal.fire({
@@ -117,7 +164,6 @@ export function SignUp({ onClose, setShowModal, setOnSwitchToSignIn }) {
       setGoogleLoading(false);
     }
   };
-
   return (
     <div
       className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 ${
@@ -336,4 +382,5 @@ export function SignUp({ onClose, setShowModal, setOnSwitchToSignIn }) {
       </motion.div>
     </div>
   );
+
 }

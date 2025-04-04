@@ -5,7 +5,7 @@ import Link from "next/link";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import lessonsData from "../Dashboard/data/lessons.json";
+import lessonsData from "./data/lessons.json"
 
 function Lessons() {
   const [lessons, setLessons] = useState(lessonsData);
