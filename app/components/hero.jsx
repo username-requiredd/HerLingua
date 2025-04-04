@@ -52,7 +52,7 @@ const Hero = ({ setShowModal }) => {
                 <div className="absolute -inset-4 bg-white rounded-3xl shadow-xl transform rotate-3 z-0"></div>
                 <div className="relative z-10 bg-white p-2 rounded-3xl shadow-2xl overflow-hidden">
                   <Image
-                    src="/images/r.jpeg"
+                    src="/images/R.jpeg"
                     width={800}
                     height={600}
                     alt="Learn German"
