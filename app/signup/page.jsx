@@ -25,7 +25,7 @@ export default function SignUpPage() {
     if (!user) return;
 
     const userRef = doc(db, "users", user.uid);
-    
+
     await setDoc(userRef, {
       uid: user.uid,
       email: user.email,
@@ -46,15 +46,6 @@ export default function SignUpPage() {
       lessons: {} 
     });
   };
-
-
-
-
-
-
-
-
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -81,41 +72,34 @@ export default function SignUpPage() {
       return;
     }
 
+    try {
+      // 1. Create auth user
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
+      // 2 & 3. Run these operations in parallel instead of sequentially
+      await Promise.all([
+        updateProfile(userCredential.user, { displayName: name }),
+        createUserDocument(userCredential.user, {
+          displayName: name,
+          gender,
+          emailVerified: false
+        })
+      ]);
 
-
-
-
-try {
-  // 1. Create auth user
-  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  
-  // 2 & 3. CHANGE THIS: Run these operations in parallel instead of sequentially
-  await Promise.all([
-    updateProfile(userCredential.user, { displayName: name }),
-    createUserDocument(userCredential.user, {
-      displayName: name,
-      gender,
-      emailVerified: false
-    })
-  ]);
-  
-  // CHANGE THIS: Be consistent with navigation and add slight delay
-
-Swal.fire({
+      // Be consistent with navigation and add slight delay
+      Swal.fire({
         icon: "success",
         title: "Welcome to HerLingua!",
         text: "Your account has been created successfully.",
         confirmButtonColor: "#ec4899",
       });
-  setTimeout(() => {
-    router.push("/dashboard"); // Use same destination as Google signup
-  }, 500);
+      setTimeout(() => {
+        router.push("/dashboard"); // Use same destination as Google signup
+      }, 500);
 
-  
-} catch (error) {
-  let errorMessage = "An error occurred during registration.";
-      
+    } catch (error) {
+      let errorMessage = "An error occurred during registration.";
+
       switch (error.code) {
         case "auth/email-already-in-use":
           errorMessage = "This email is already registered.";
@@ -140,13 +124,6 @@ Swal.fire({
       setIsLoading(false);
     }
   };
-}
-
-
-
-
-    
-  };
 
   const handleGoogleSignUp = async () => {
     setGoogleLoading(true);
@@ -155,7 +132,7 @@ Swal.fire({
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      
+
       // Create user document for Google sign-up
       await createUserDocument(user, {
         displayName: user.displayName,
