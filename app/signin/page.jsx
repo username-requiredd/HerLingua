@@ -2,8 +2,9 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import Swal from "sweetalert2";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -17,13 +18,60 @@ export default function SignInPage() {
   // Combined loading state to disable the form
   const isAuthenticating = isLoading || googleLoading;
 
+  // Function to check and create user document if it doesn't exist
+  const ensureUserDocument = async (user) => {
+    if (!user) return;
+    
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        // Create a basic user document if it doesn't exist
+        await setDoc(userRef, {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || "",
+          createdAt: serverTimestamp(),
+          lastLogin: serverTimestamp(),
+          profileComplete: false,
+          role: "student"
+        });
+        
+        // Also create progress document
+        const progressRef = doc(db, "userProgress", user.uid);
+        await setDoc(progressRef, {
+          userId: user.uid,
+          lessonsCompleted: 0,
+          lastUpdated: serverTimestamp(),
+          lessons: {}
+        });
+        
+        console.log("Created missing user documents for:", user.uid);
+      } else {
+        // Update last login time
+        await updateDoc(userRef, {
+          lastLogin: serverTimestamp()
+        });
+      }
+    } catch (error) {
+      console.error("Error ensuring user document:", error);
+      throw error; // Re-throw to handle in the calling function
+    }
+  };
+
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      // 1. Authenticate with Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
+      // 2. Ensure Firestore document exists for this user
+      await ensureUserDocument(userCredential.user);
+
+      // 3. Show success message
       Swal.fire({
         icon: "success",
         title: "Login Successful!",
@@ -31,10 +79,13 @@ export default function SignInPage() {
         confirmButtonColor: "#ec4899",
       });
 
-      router.push("/dashboard");
+      // 4. Navigate with a slight delay to ensure auth state propagates
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 500);
     } catch (error) {
       let errorMessage = "An error occurred during login.";
-      
+
       switch (error.code) {
         case "auth/invalid-email":
           errorMessage = "Please enter a valid email address.";
@@ -68,8 +119,13 @@ export default function SignInPage() {
     const provider = new GoogleAuthProvider();
 
     try {
-      await signInWithPopup(auth, provider);
+      // 1. Sign in with Google
+      const result = await signInWithPopup(auth, provider);
       
+      // 2. Ensure Firestore document exists
+      await ensureUserDocument(result.user);
+      
+      // 3. Show success message
       Swal.fire({
         icon: "success",
         title: "Login Successful!",
@@ -77,7 +133,10 @@ export default function SignInPage() {
         confirmButtonColor: "#ec4899",
       });
 
-      router.push("/dashboard");
+      // 4. Navigate with a slight delay to ensure auth state propagates
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 500);
     } catch (error) {
       console.error("Google sign-in error:", error);
       Swal.fire({
