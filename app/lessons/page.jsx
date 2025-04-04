@@ -3,30 +3,29 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { auth } from "@/lib/firebase";
-import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import lessonsData from "./data/lessons.json"
+import lessonsData from "../../data/lessons.json"
 
 function Lessons() {
   const [lessons, setLessons] = useState(lessonsData);
   const [progress, setProgress] = useState(0);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Initialize auth state
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       if (currentUser) {
         setUser(currentUser);
       } else {
-        setUser(null);
+        router.push('/signin');
       }
+      setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
-  // Calculate progress
   useEffect(() => {
     if (lessons.length > 0) {
       const completedLessons = lessons.lessons.filter(
@@ -37,32 +36,34 @@ function Lessons() {
     }
   }, [lessons]);
 
-  // Save lessons to localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("germanLessons", JSON.stringify(lessons));
     }
   }, [lessons]);
 
-  // Initialize default lessons if none exist
   useEffect(() => {
     if (lessons.lessons?.length === 0) {
       setLessons(lessonsData);
     }
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      router.push("/");
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
+
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
+        <div className="text-purple-500">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
-      {/* Header with User Info */}
       <header className="bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg">
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
@@ -78,20 +79,12 @@ function Lessons() {
               </p>
             </motion.div>
 
-            {user && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center gap-4"
-              >
-              </motion.div>
-            )}
+          
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-
         {/* Course Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {lessons.lessons.map((lesson, index) => (

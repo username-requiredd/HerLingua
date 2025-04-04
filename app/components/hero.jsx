@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowBigRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 const Hero = ({ setShowModal }) => {
   return (
     <>
@@ -30,12 +31,12 @@ const Hero = ({ setShowModal }) => {
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center md:justify-start">
-                <button
-                  onClick={() => setShowModal(true)}
+                <Link
+                href={"/lessons"}
                   className="bg-white flex items-center text-pink-600 px-8 py-3 rounded-full font-semibold hover:bg-yellow-200 transition shadow-lg"
                 >
                   Start Learning Now <ArrowBigRight />
-                </button>
+                </Link>
                 {/* <button className="border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-white hover:text-pink-600 transition">
                   View Course Syllabus
                 </button> */}

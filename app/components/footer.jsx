@@ -3,7 +3,7 @@ import Link from "next/link";
 
 const Footer = () => {
   return (
-    <footer className="bg-gradient-to-r from-purple-900 to-pink-800 py-8 mt-12 text-white shadow-lg">
+    <footer className=" z-50 bg-gradient-to-r from-purple-900 to-pink-800 py-8 text-white shadow-lg">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center">
           {/* Logo and Copyright */}

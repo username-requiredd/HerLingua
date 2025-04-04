@@ -4,12 +4,12 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import lessonsData from "../data/lessons.json"
+import lessonsData from "../../../data/lessons.json"
 import { auth } from "@/lib/firebase";
 import { updateUserProgress,getUserProgress } from "@/services/userprogress";
 
 function LessonDetail({ params }) {
-  const { id } = params;
+  const { id } = React.use(params);
   const router = useRouter();
   const [lesson, setLesson] = useState(null);
   const [completed, setCompleted] = useState(false);
