@@ -47,6 +47,15 @@ export default function SignUpPage() {
     });
   };
 
+
+
+
+
+
+
+
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -72,36 +81,40 @@ export default function SignUpPage() {
       return;
     }
 
-    try {
-      // 1. Create auth user
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
 
-      // 2. Update auth profile with display name
-      await updateProfile(userCredential.user, {
-        displayName: name,
-      });
 
-      // 3. Create user document in Firestore
-      await createUserDocument(userCredential.user, {
-        displayName: name,
-        gender,
-        emailVerified: false
-      });
 
-      Swal.fire({
+
+
+try {
+  // 1. Create auth user
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  
+  // 2 & 3. CHANGE THIS: Run these operations in parallel instead of sequentially
+  await Promise.all([
+    updateProfile(userCredential.user, { displayName: name }),
+    createUserDocument(userCredential.user, {
+      displayName: name,
+      gender,
+      emailVerified: false
+    })
+  ]);
+  
+  // CHANGE THIS: Be consistent with navigation and add slight delay
+
+Swal.fire({
         icon: "success",
         title: "Welcome to HerLingua!",
         text: "Your account has been created successfully.",
         confirmButtonColor: "#ec4899",
       });
+  setTimeout(() => {
+    router.push("/dashboard"); // Use same destination as Google signup
+  }, 500);
 
-      router.push("/lessons");
-    } catch (error) {
-      let errorMessage = "An error occurred during registration.";
+  
+} catch (error) {
+  let errorMessage = "An error occurred during registration.";
       
       switch (error.code) {
         case "auth/email-already-in-use":
@@ -126,6 +139,13 @@ export default function SignUpPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+}
+
+
+
+
+    
   };
 
   const handleGoogleSignUp = async () => {
