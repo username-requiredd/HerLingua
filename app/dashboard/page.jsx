@@ -1,15 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { listenToUserProgress } from "@/services/userprogress";
 import Head from "next/head";
 
-// Components
 import DashboardContent from "./DashboardContent";
-// import DashboardLayout from "./"
 import DashboardLayout from "./dashboardlayout";
 import ErrorDisplay from "./errordisplay";
 import LogoutButton from "./logoutsuccess";
@@ -55,7 +52,7 @@ function Dashboard() {
       } else {
         setUser(null);
         setLoading(false);
-        router.push("/");
+        router.push("/signin");
       }
     });
 
