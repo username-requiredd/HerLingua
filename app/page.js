@@ -26,20 +26,17 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white text-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white text-gray-900 overflow-x-hidden">
       <Navbar setShowModal={setShowModal} isScrolled={isScrolled} />
   
-      <Hero setShowModal={setShowModal} />
-
-      <Features />
-
-      <CourseLevels />
-
-      <Testimonials />
-
-      <Faq />
-
-      <CallToAction />
+      <main className="max-w-[100vw] overflow-hidden">
+        <Hero setShowModal={setShowModal} />
+        <Features />
+        <CourseLevels />
+        <Testimonials />
+        <Faq />
+        <CallToAction />
+      </main>
     </div>
   );
 }

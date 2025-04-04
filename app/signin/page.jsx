@@ -14,6 +14,9 @@ export default function SignInPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
 
+  // Combined loading state to disable the form
+  const isAuthenticating = isLoading || googleLoading;
+
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -110,11 +113,13 @@ export default function SignInPage() {
 
           <div className="p-6">
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: isAuthenticating ? 1 : 1.02 }}
+              whileTap={{ scale: isAuthenticating ? 1 : 0.98 }}
               onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center gap-2 bg-white border border-pink-200 text-gray-700 py-3 px-4 rounded-lg shadow-sm hover:shadow-md transition-all mb-6"
-              disabled={googleLoading}
+              className={`w-full flex items-center justify-center gap-2 bg-white border border-pink-200 text-gray-700 py-3 px-4 rounded-lg shadow-sm transition-all mb-6 ${
+                isAuthenticating ? "opacity-70 cursor-not-allowed" : "hover:shadow-md"
+              }`}
+              disabled={isAuthenticating}
             >
               {googleLoading ? (
                 <span className="flex items-center justify-center">
@@ -161,71 +166,89 @@ export default function SignInPage() {
             </div>
 
             <form className="space-y-4" onSubmit={handleEmailLogin}>
-              <div>
-                <label className="block text-sm font-medium text-pink-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-pink-200 focus:ring-2 focus:ring-pink-300 focus:border-transparent"
-                  placeholder="your@email.com"
-                  required
-                />
-              </div>
+              <fieldset disabled={isAuthenticating} className={isAuthenticating ? "opacity-70" : ""}>
+                <div>
+                  <label className="block text-sm font-medium text-pink-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={`w-full px-4 py-3 rounded-lg border border-pink-200 focus:ring-2 focus:ring-pink-300 focus:border-transparent ${
+                      isAuthenticating ? "cursor-not-allowed" : ""
+                    }`}
+                    placeholder="your@email.com"
+                    required
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-pink-700 mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-pink-200 focus:ring-2 focus:ring-pink-300 focus:border-transparent"
-                  placeholder="Enter your password"
-                  required
-                  minLength="6"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-pink-700 mb-1">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`w-full px-4 py-3 rounded-lg border border-pink-200 focus:ring-2 focus:ring-pink-300 focus:border-transparent ${
+                      isAuthenticating ? "cursor-not-allowed" : ""
+                    }`}
+                    placeholder="Enter your password"
+                    required
+                    minLength="6"
+                  />
+                </div>
 
-              <div className="flex justify-end">
-                <Link href="/forgot-password" className="text-sm text-pink-600 hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
+                <div className="flex justify-end">
+                  <Link 
+                    href="/forgot-password" 
+                    className={`text-sm text-pink-600 hover:underline ${
+                      isAuthenticating ? "pointer-events-none opacity-70" : ""
+                    }`}
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-white py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all font-medium mt-2"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <span className="flex items-center justify-center">
-                    <svg 
-                      className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      fill="none" 
-                      viewBox="0 0 24 24"
-                    >
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Signing in...
-                  </span>
-                ) : (
-                  "Sign In"
-                )}
-              </motion.button>
+                <motion.button
+                  whileHover={{ scale: isAuthenticating ? 1 : 1.02 }}
+                  whileTap={{ scale: isAuthenticating ? 1 : 0.98 }}
+                  type="submit"
+                  className={`w-full bg-gradient-to-r from-pink-500 to-purple-500 text-white py-3 px-4 rounded-lg shadow-md transition-all font-medium mt-4 ${
+                    isAuthenticating ? "cursor-not-allowed" : "hover:shadow-lg"
+                  }`}
+                  disabled={isAuthenticating}
+                >
+                  {isLoading ? (
+                    <span className="flex items-center justify-center">
+                      <svg 
+                        className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        fill="none" 
+                        viewBox="0 0 24 24"
+                      >
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Signing in...
+                    </span>
+                  ) : (
+                    "Sign In"
+                  )}
+                </motion.button>
+              </fieldset>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Don't have an account?{" "}
-                <Link href="/signup" className="text-pink-600 font-medium hover:underline">
+                <Link 
+                  href="/signup" 
+                  className={`text-pink-600 font-medium hover:underline ${
+                    isAuthenticating ? "pointer-events-none" : ""
+                  }`}
+                >
                   Sign up
                 </Link>
               </p>
@@ -234,7 +257,22 @@ export default function SignInPage() {
         </motion.div>
 
         <div className="mt-8 text-center text-sm text-pink-700">
-          <p>By signing in, you agree to our <Link href="/terms" className="underline">Terms of Service</Link> and <Link href="/privacy" className="underline">Privacy Policy</Link></p>
+          <p>
+            By signing in, you agree to our{" "}
+            <Link 
+              href="/terms" 
+              className={isAuthenticating ? "underline pointer-events-none" : "underline"}
+            >
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link 
+              href="/privacy" 
+              className={isAuthenticating ? "underline pointer-events-none" : "underline"}
+            >
+              Privacy Policy
+            </Link>
+          </p>
         </div>
       </div>
     </div>
