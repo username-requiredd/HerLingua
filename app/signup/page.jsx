@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import { auth, db } from "@/lib/firebase";
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
@@ -16,10 +16,18 @@ export default function SignUpPage() {
   const [gender, setGender] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
 
   // Combined loading state to disable the form
-  const isAuthenticating = isLoading || googleLoading;
+  const isAuthenticating = isLoading || googleLoading || isRedirecting;
+
+  // Handle redirection more properly
+  useEffect(() => {
+    if (isRedirecting) {
+      router.push("/dashboard");
+    }
+  }, [isRedirecting, router]);
 
   const createUserDocument = async (user, additionalData = {}) => {
     if (!user) return;
@@ -86,16 +94,15 @@ export default function SignUpPage() {
         })
       ]);
 
-      // Be consistent with navigation and add slight delay
-      Swal.fire({
+      await Swal.fire({
         icon: "success",
         title: "Welcome to HerLingua!",
         text: "Your account has been created successfully.",
         confirmButtonColor: "#ec4899",
       });
-      setTimeout(() => {
-        router.push("/dashboard"); // Use same destination as Google signup
-      }, 500);
+      
+      // Set redirecting state instead of using setTimeout
+      setIsRedirecting(true);
 
     } catch (error) {
       let errorMessage = "An error occurred during registration.";
@@ -120,7 +127,6 @@ export default function SignUpPage() {
         text: errorMessage,
         confirmButtonColor: "#ec4899",
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -140,14 +146,15 @@ export default function SignUpPage() {
         profileComplete: false
       });
 
-      Swal.fire({
+      await Swal.fire({
         icon: "success",
         title: "Welcome to HerLingua!",
         text: "Your account has been created successfully with Google.",
         confirmButtonColor: "#ec4899",
       });
 
-      router.push("/dashboard");
+      // Set redirecting state instead of direct router push
+      setIsRedirecting(true);
     } catch (error) {
       console.error("Google sign-up error:", error);
       Swal.fire({
@@ -156,7 +163,6 @@ export default function SignUpPage() {
         text: "An error occurred during Google sign-up. Please try again.",
         confirmButtonColor: "#ec4899",
       });
-    } finally {
       setGoogleLoading(false);
     }
   };
@@ -191,7 +197,7 @@ export default function SignUpPage() {
               }`}
               disabled={isAuthenticating}
             >
-              {googleLoading ? (
+              {googleLoading || isRedirecting ? (
                 <span className="flex items-center justify-center">
                   <svg 
                     className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-700" 
@@ -202,7 +208,7 @@ export default function SignUpPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Signing up...
+                  {isRedirecting ? "Redirecting..." : "Signing up..."}
                 </span>
               ) : (
                 <>
@@ -331,7 +337,7 @@ export default function SignUpPage() {
                   }`}
                   disabled={isAuthenticating}
                 >
-                  {isLoading ? (
+                  {isLoading || isRedirecting ? (
                     <span className="flex items-center justify-center">
                       <svg
                         className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
@@ -353,7 +359,7 @@ export default function SignUpPage() {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         ></path>
                       </svg>
-                      Creating Account...
+                      {isRedirecting ? "Redirecting..." : "Creating Account..."}
                     </span>
                   ) : (
                     "Create Account"
